@@ -1,6 +1,6 @@
 import { useEffect, useRef } from 'react';
 import { Button } from '@/components/ui/button';
-import { Trophy, TrendingUp } from 'lucide-react';
+import { TrendingUp } from 'lucide-react';
 
 interface StartScreenProps {
   onStart: () => void;
