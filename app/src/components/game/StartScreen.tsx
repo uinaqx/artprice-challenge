@@ -81,10 +81,6 @@ export function StartScreen({ onStart, history }: StartScreenProps) {
           <div className="w-2 h-2 rounded-full bg-[#f2a93b]" />
           <span>真实拍卖数据</span>
         </div>
-        <div className="flex items-center gap-2">
-          <div className="w-2 h-2 rounded-full bg-[#f2a93b]" />
-          <span>全球名作</span>
-        </div>
       </div>
 
       {/* History Section */}

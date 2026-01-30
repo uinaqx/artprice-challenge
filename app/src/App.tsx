@@ -75,11 +75,8 @@ function App() {
 
   return (
     <div className="min-h-screen bg-black text-white font-sans selection:bg-[#f2a93b]/30">
-      {/* Global background gradient */}
-      <div className="fixed inset-0 pointer-events-none">
-        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[600px] bg-gradient-radial from-[#f2a93b]/5 via-transparent to-transparent rounded-full blur-3xl" />
-        <div className="absolute bottom-0 right-0 w-[600px] h-[400px] bg-gradient-radial from-[#f2880a]/5 via-transparent to-transparent rounded-full blur-3xl" />
-      </div>
+      {/* Global background - static black to orange gradient */}
+      <div className="fixed inset-0 pointer-events-none bg-gradient-to-br from-black via-black to-[#f2880a]/20" />
 
       {/* Content */}
       <div className="relative z-10">
