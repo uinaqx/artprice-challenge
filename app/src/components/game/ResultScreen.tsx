@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { Trophy, RotateCcw, Share2, Target, TrendingUp, Award, CheckCircle } from 'lucide-react';
+import { Trophy, RotateCcw, Target, TrendingUp, Award, CheckCircle } from 'lucide-react';
 import { formatPrice, type Artwork } from '@/data/artworks';
 
 interface ResultScreenProps {
@@ -177,29 +177,14 @@ export function ResultScreen({ results, onRestart }: ResultScreenProps) {
         </div>
       )}
 
-      {/* Action Buttons */}
-      <div className="flex flex-col sm:flex-row gap-4 w-full max-w-md">
+      {/* Action Button */}
+      <div className="w-full max-w-md">
         <Button
           onClick={onRestart}
-          className="flex-1 px-8 py-5 text-lg font-semibold bg-gradient-to-r from-[#f2a93b] to-[#f2880a] hover:from-[#f2c84b] hover:to-[#f2a93b] text-black rounded-xl transition-all duration-300 hover:-translate-y-1"
+          className="w-full px-8 py-5 text-lg font-semibold bg-gradient-to-r from-[#f2a93b] to-[#f2880a] hover:from-[#f2c84b] hover:to-[#f2a93b] text-black rounded-xl transition-all duration-300 hover:-translate-y-1"
         >
           <RotateCcw className="w-5 h-5 mr-2" />
           再玩一次
-        </Button>
-        <Button
-          onClick={() => {
-            const text = `我在ArtPrice Challenge中获得了${totalAccuracy}%的准确率，被评为"${rating.text}"！快来挑战你的艺术品鉴赏眼力吧！`;
-            if (navigator.share) {
-              navigator.share({ title: 'ArtPrice Challenge', text });
-            } else {
-              navigator.clipboard.writeText(text);
-            }
-          }}
-          variant="outline"
-          className="flex-1 px-8 py-5 text-lg font-semibold border-[#2a2a2a] text-white hover:bg-[#1a1a1a] hover:border-[#f2a93b]/50 rounded-xl transition-all duration-300"
-        >
-          <Share2 className="w-5 h-5 mr-2" />
-          分享成绩
         </Button>
       </div>
     </div>

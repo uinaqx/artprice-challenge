@@ -1,6 +1,6 @@
 import { useEffect, useRef } from 'react';
 import { Button } from '@/components/ui/button';
-import { Trophy, TrendingUp, Palette } from 'lucide-react';
+import { Trophy, TrendingUp } from 'lucide-react';
 
 interface StartScreenProps {
   onStart: () => void;
@@ -39,16 +39,6 @@ export function StartScreen({ onStart, history }: StartScreenProps) {
     >
       {/* Background glow effect */}
       <div className="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-gradient-radial from-[#f2a93b]/10 via-transparent to-transparent rounded-full blur-3xl pointer-events-none" />
-      
-      {/* Icon */}
-      <div className="mb-8 relative">
-        <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-[#f2a93b] to-[#f2880a] flex items-center justify-center shadow-lg shadow-[#f2a93b]/20">
-          <Palette className="w-10 h-10 text-black" />
-        </div>
-        <div className="absolute -bottom-2 -right-2 w-8 h-8 rounded-full bg-[#1a1a1a] border border-[#2a2a2a] flex items-center justify-center">
-          <Trophy className="w-4 h-4 text-[#f2a93b]" />
-        </div>
-      </div>
 
       {/* Title */}
       <h1 className="text-4xl md:text-5xl font-bold text-center mb-4 font-serif">

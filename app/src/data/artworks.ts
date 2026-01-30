@@ -393,21 +393,24 @@ export function getRandomArtworks(count: number = 10): Artwork[] {
 
 export function generatePriceOptions(correctPrice: number): number[] {
   const options = [correctPrice];
-  
-  // Generate 3 wrong options with varying degrees of difference
-  const variations = [0.3, 0.5, 0.7, 1.5, 2, 3];
-  
+
+  // Generate 3 wrong options with larger differences
+  // Minimum 50% difference, up to 500% difference
+  const variations = [0.5, 0.8, 1.2, 1.8, 2.5, 3.5, 5];
+
   while (options.length < 4) {
     const variation = variations[Math.floor(Math.random() * variations.length)];
     const isHigher = Math.random() > 0.5;
     const wrongPrice = Math.round(correctPrice * (isHigher ? (1 + variation) : (1 - variation)));
-    
-    // Ensure unique and positive
-    if (wrongPrice > 0 && !options.includes(wrongPrice)) {
+
+    // Ensure unique, positive, and at least 50% different from correct
+    const minDiff = correctPrice * 0.5;
+    const actualDiff = Math.abs(wrongPrice - correctPrice);
+    if (wrongPrice > 0 && !options.includes(wrongPrice) && actualDiff >= minDiff) {
       options.push(wrongPrice);
     }
   }
-  
+
   return options.sort(() => Math.random() - 0.5);
 }
 
