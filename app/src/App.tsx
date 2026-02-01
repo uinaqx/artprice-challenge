@@ -189,6 +189,7 @@ function App() {
       <Navbar
         categories={categories}
         currentPage={currentPage === 'home' ? 'home' : currentPage === 'games' || currentPage === 'game-playing' || currentPage === 'game-result' ? 'games' : 'category'}
+        currentCategoryId={selectedCategory?.id || null}
         onNavigateHome={handleNavigateHome}
         onNavigateCategory={handleNavigateCategory}
         onNavigateGames={handleNavigateGames}

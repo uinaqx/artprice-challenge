@@ -4,6 +4,7 @@ import type { Category } from '@/data/aiTools';
 interface NavbarProps {
   categories: Category[];
   currentPage: 'home' | 'category' | 'games';
+  currentCategoryId: string | null;
   onNavigateHome: () => void;
   onNavigateCategory: (category: Category) => void;
   onNavigateGames: () => void;
@@ -18,7 +19,7 @@ const iconMap: Record<string, React.ReactNode> = {
   Zap: <Zap className="w-4 h-4" />,
 };
 
-export function Navbar({ categories, currentPage, onNavigateHome, onNavigateCategory, onNavigateGames }: NavbarProps) {
+export function Navbar({ categories, currentPage, currentCategoryId, onNavigateHome, onNavigateCategory, onNavigateGames }: NavbarProps) {
   return (
     <nav className="fixed top-0 left-0 right-0 z-50 bg-black/80 backdrop-blur-md border-b border-white/10">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -55,7 +56,7 @@ export function Navbar({ categories, currentPage, onNavigateHome, onNavigateCate
                 key={category.id}
                 onClick={() => onNavigateCategory(category)}
                 className={`flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-medium transition-all whitespace-nowrap ${
-                  currentPage === 'category'
+                  currentCategoryId === category.id
                     ? 'bg-orange-500/20 text-orange-400 border border-orange-500/30'
                     : 'text-white/70 hover:text-white hover:bg-white/10'
                 }`}
