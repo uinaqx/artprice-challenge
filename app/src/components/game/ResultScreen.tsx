@@ -1,14 +1,15 @@
 import { useEffect, useRef, useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { Trophy, RotateCcw, Target, TrendingUp, Award, CheckCircle } from 'lucide-react';
+import { Trophy, RotateCcw, Target, TrendingUp, Award, CheckCircle, Clock } from 'lucide-react';
 import { formatPrice, type Artwork } from '@/data/artworks';
 
 interface ResultScreenProps {
   results: { artwork: Artwork; selectedPrice: number; accuracy: number }[];
   onRestart: () => void;
+  timeSeconds: number;
 }
 
-export function ResultScreen({ results, onRestart }: ResultScreenProps) {
+export function ResultScreen({ results, onRestart, timeSeconds }: ResultScreenProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const [displayScore, setDisplayScore] = useState(0);
   const [showDetails, setShowDetails] = useState(false);
@@ -65,6 +66,12 @@ export function ResultScreen({ results, onRestart }: ResultScreenProps) {
   const rating = getRating(totalAccuracy);
   const RatingIcon = rating.icon;
 
+  const formatTime = (seconds: number) => {
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${mins}:${secs.toString().padStart(2, '0')}`;
+  };
+
   return (
     <div 
       ref={containerRef}
@@ -109,27 +116,34 @@ export function ResultScreen({ results, onRestart }: ResultScreenProps) {
 
         {/* Stats Grid */}
         {showDetails && (
-          <div className="grid grid-cols-3 gap-4 animate-in fade-in duration-500">
-            <div className="text-center p-4 bg-[#2a2a2a]/50 rounded-xl">
+          <div className="grid grid-cols-4 gap-3 animate-in fade-in duration-500">
+            <div className="text-center p-3 bg-[#2a2a2a]/50 rounded-xl">
               <div className="flex items-center justify-center gap-1 mb-1">
                 <CheckCircle className="w-4 h-4 text-green-500" />
-                <span className="text-2xl font-bold text-white">{correctCount}</span>
+                <span className="text-xl font-bold text-white">{correctCount}</span>
               </div>
               <p className="text-xs text-[#888888]">完全正确</p>
             </div>
-            <div className="text-center p-4 bg-[#2a2a2a]/50 rounded-xl">
+            <div className="text-center p-3 bg-[#2a2a2a]/50 rounded-xl">
               <div className="flex items-center justify-center gap-1 mb-1">
                 <Target className="w-4 h-4 text-[#f2a93b]" />
-                <span className="text-2xl font-bold text-white">{results.length}</span>
+                <span className="text-xl font-bold text-white">{results.length}</span>
               </div>
               <p className="text-xs text-[#888888]">总题数</p>
             </div>
-            <div className="text-center p-4 bg-[#2a2a2a]/50 rounded-xl">
+            <div className="text-center p-3 bg-[#2a2a2a]/50 rounded-xl">
               <div className="flex items-center justify-center gap-1 mb-1">
                 <Award className="w-4 h-4 text-[#f2a93b]" />
-                <span className="text-2xl font-bold text-white">{bestResult.accuracy}%</span>
+                <span className="text-xl font-bold text-white">{bestResult.accuracy}%</span>
               </div>
               <p className="text-xs text-[#888888]">最佳表现</p>
+            </div>
+            <div className="text-center p-3 bg-[#2a2a2a]/50 rounded-xl">
+              <div className="flex items-center justify-center gap-1 mb-1">
+                <Clock className="w-4 h-4 text-[#f2a93b]" />
+                <span className="text-xl font-bold text-white">{formatTime(timeSeconds)}</span>
+              </div>
+              <p className="text-xs text-[#888888]">用时</p>
             </div>
           </div>
         )}
