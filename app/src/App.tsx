@@ -1,10 +1,15 @@
-import { useState, useEffect, useCallback } from 'react';
-import { StartScreen } from '@/components/game/StartScreen';
+import { useState, useCallback, useEffect } from 'react';
+import { Navbar } from '@/components/navigation/Navbar';
+import { HomePage } from '@/components/pages/HomePage';
+import { CategoryPage } from '@/components/pages/CategoryPage';
+import { GamesPage } from '@/components/pages/GamesPage';
 import { GameScreen } from '@/components/game/GameScreen';
 import { ResultScreen } from '@/components/game/ResultScreen';
+import { StartScreen } from '@/components/game/StartScreen';
 import { getRandomArtworks, type Artwork } from '@/data/artworks';
+import { getRandomTool, categories, type AITool, type Category } from '@/data/aiTools';
 
-type GameState = 'start' | 'playing' | 'result';
+type PageState = 'home' | 'category' | 'games' | 'game-playing' | 'game-result';
 
 interface GameResult {
   artwork: Artwork;
@@ -25,7 +30,12 @@ export interface LeaderboardEntry {
 }
 
 function App() {
-  const [gameState, setGameState] = useState<GameState>('start');
+  const [currentPage, setCurrentPage] = useState<PageState>('home');
+  const [selectedCategory, setSelectedCategory] = useState<Category | null>(null);
+  const [featuredTool, setFeaturedTool] = useState<AITool>(getRandomTool());
+
+  // Game states
+  const [gameState, setGameState] = useState<'start' | 'playing' | 'result'>('start');
   const [artworks, setArtworks] = useState<Artwork[]>([]);
   const [results, setResults] = useState<GameResult[]>([]);
   const [history, setHistory] = useState<HistoryRecord[]>([]);
@@ -59,7 +69,29 @@ function App() {
     }
   }, []);
 
-  // Save history to localStorage
+  // Navigation handlers
+  const handleNavigateHome = useCallback(() => {
+    setCurrentPage('home');
+    setFeaturedTool(getRandomTool());
+    setSelectedCategory(null);
+  }, []);
+
+  const handleNavigateCategory = useCallback((category: Category) => {
+    setSelectedCategory(category);
+    setCurrentPage('category');
+  }, []);
+
+  const handleNavigateGames = useCallback(() => {
+    setCurrentPage('games');
+    setGameState('start');
+  }, []);
+
+  const handleNavigateToGame = useCallback(() => {
+    setCurrentPage('game-playing');
+    setGameState('start');
+  }, []);
+
+  // Game handlers
   const saveHistory = useCallback((newRecord: HistoryRecord) => {
     setHistory(prev => {
       const updated = [...prev, newRecord].slice(-10);
@@ -68,15 +100,12 @@ function App() {
     });
   }, []);
 
-  // Save leaderboard to localStorage
   const saveLeaderboard = useCallback((entry: LeaderboardEntry) => {
     setLeaderboard(prev => {
-      // Check if user already has an entry
       const existingIndex = prev.findIndex(e => e.username === entry.username);
       let updated;
 
       if (existingIndex >= 0) {
-        // Only update if new score is better (higher accuracy, or same accuracy but faster)
         const existing = prev[existingIndex];
         const isBetter = entry.accuracy > existing.accuracy ||
           (entry.accuracy === existing.accuracy && entry.timeSeconds < existing.timeSeconds);
@@ -91,7 +120,6 @@ function App() {
         updated = [...prev, entry];
       }
 
-      // Sort by accuracy (desc), then by time (asc)
       updated.sort((a, b) => {
         if (b.accuracy !== a.accuracy) {
           return b.accuracy - a.accuracy;
@@ -104,7 +132,7 @@ function App() {
     });
   }, []);
 
-  const handleStart = useCallback((name: string) => {
+  const handleGameStart = useCallback((name: string) => {
     setUsername(name);
     localStorage.setItem('artprice-username', name);
     const selectedArtworks = getRandomArtworks(10);
@@ -114,23 +142,19 @@ function App() {
     setGameState('playing');
   }, []);
 
-  const handleComplete = useCallback((gameResults: GameResult[]) => {
+  const handleGameComplete = useCallback((gameResults: GameResult[]) => {
     setResults(gameResults);
 
-    // Calculate average accuracy
     const averageAccuracy = Math.round(
       gameResults.reduce((sum, r) => sum + r.accuracy, 0) / gameResults.length
     );
 
-    // Calculate time taken
     const timeSeconds = Math.round((Date.now() - gameStartTime) / 1000);
 
-    // Save to history
     const today = new Date();
     const dateStr = `${today.getMonth() + 1}/${today.getDate()}`;
     saveHistory({ date: dateStr, accuracy: averageAccuracy });
 
-    // Save to leaderboard
     if (username) {
       saveLeaderboard({
         username,
@@ -141,43 +165,106 @@ function App() {
     }
 
     setGameState('result');
+    setCurrentPage('game-result');
   }, [saveHistory, saveLeaderboard, username, gameStartTime]);
 
-  const handleRestart = useCallback(() => {
+  const handleGameRestart = useCallback(() => {
     setGameState('start');
     setArtworks([]);
     setResults([]);
+    setCurrentPage('games');
+  }, []);
+
+  const handleBackFromGame = useCallback(() => {
+    setCurrentPage('games');
+    setGameState('start');
   }, []);
 
   return (
-    <div className="min-h-screen bg-black text-white font-sans selection:bg-[#f2a93b]/30">
-      {/* Global background - static black to orange gradient */}
-      <div className="fixed inset-0 pointer-events-none bg-gradient-to-br from-black via-black to-[#f2880a]/20" />
+    <div className="min-h-screen bg-black text-white font-sans selection:bg-orange-500/30">
+      {/* Global background - top to bottom orange-black gradient */}
+      <div className="fixed inset-0 pointer-events-none bg-gradient-to-b from-orange-900/30 via-black to-black" />
+
+      {/* Navigation */}
+      <Navbar
+        categories={categories}
+        currentPage={currentPage === 'home' ? 'home' : currentPage === 'games' || currentPage === 'game-playing' || currentPage === 'game-result' ? 'games' : 'category'}
+        onNavigateHome={handleNavigateHome}
+        onNavigateCategory={handleNavigateCategory}
+        onNavigateGames={handleNavigateGames}
+      />
 
       {/* Content */}
-      <div className="relative z-10">
-        {gameState === 'start' && (
-          <StartScreen
-            onStart={handleStart}
-            history={history}
-            leaderboard={leaderboard}
-            defaultUsername={username}
+      <div className="relative z-10 pt-16">
+        {currentPage === 'home' && (
+          <HomePage
+            featuredTool={featuredTool}
+            categories={categories}
+            onNavigateCategory={handleNavigateCategory}
+            onNavigateGames={handleNavigateGames}
+            onRefreshFeatured={() => setFeaturedTool(getRandomTool())}
           />
         )}
-        
-        {gameState === 'playing' && artworks.length > 0 && (
-          <GameScreen 
-            artworks={artworks} 
-            onComplete={handleComplete}
+
+        {currentPage === 'category' && selectedCategory && (
+          <CategoryPage
+            category={selectedCategory}
+            onBack={handleNavigateHome}
           />
         )}
-        
-        {gameState === 'result' && (
-          <ResultScreen
-            results={results}
-            onRestart={handleRestart}
-            timeSeconds={Math.round((Date.now() - gameStartTime) / 1000)}
+
+        {currentPage === 'games' && (
+          <GamesPage
+            onPlayArtPrice={handleNavigateToGame}
           />
+        )}
+
+        {currentPage === 'game-playing' && gameState === 'start' && (
+          <div className="min-h-screen flex flex-col">
+            <button
+              onClick={handleBackFromGame}
+              className="absolute top-20 left-4 z-50 px-4 py-2 text-sm text-white/70 hover:text-white bg-white/10 hover:bg-white/20 rounded-lg backdrop-blur-sm transition-all"
+            >
+              ← 返回小游戏
+            </button>
+            <StartScreen
+              onStart={handleGameStart}
+              history={history}
+              leaderboard={leaderboard}
+              defaultUsername={username}
+            />
+          </div>
+        )}
+
+        {currentPage === 'game-playing' && gameState === 'playing' && artworks.length > 0 && (
+          <div className="min-h-screen flex flex-col">
+            <button
+              onClick={handleBackFromGame}
+              className="absolute top-20 left-4 z-50 px-4 py-2 text-sm text-white/70 hover:text-white bg-white/10 hover:bg-white/20 rounded-lg backdrop-blur-sm transition-all"
+            >
+              ← 退出游戏
+            </button>
+            <GameScreen
+              artworks={artworks}
+              onComplete={handleGameComplete}
+            />
+          </div>
+        )}
+
+        {currentPage === 'game-result' && (
+          <div className="min-h-screen flex flex-col">
+            <button
+              onClick={handleBackFromGame}
+              className="absolute top-20 left-4 z-50 px-4 py-2 text-sm text-white/70 hover:text-white bg-white/10 hover:bg-white/20 rounded-lg backdrop-blur-sm transition-all"
+            >
+              ← 返回小游戏
+            </button>
+            <ResultScreen
+              results={results}
+              onRestart={handleGameRestart}
+              timeSeconds={Math.round((Date.now() - gameStartTime) / 1000)}
+            />
+          </div>
         )}
       </div>
     </div>
