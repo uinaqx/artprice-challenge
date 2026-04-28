@@ -33,10 +33,10 @@ export function GameScreen({ artworks, onComplete }: GameScreenProps) {
 
   const handleSelectPrice = (price: number) => {
     if (showResult) return;
-    
+
     setSelectedPrice(price);
     setShowResult(true);
-    
+
     const accuracy = calculateAccuracy(price, currentArtwork.price);
     setResults(prev => [...prev, { artwork: currentArtwork, selectedPrice: price, accuracy }]);
   };
@@ -49,12 +49,23 @@ export function GameScreen({ artworks, onComplete }: GameScreenProps) {
         setIsTransitioning(false);
       }, 300);
     } else {
-      onComplete(results);
+      const finalResults = selectedPrice === null
+        ? results
+        : [
+            ...results.filter(result => result.artwork.title !== currentArtwork.title),
+            {
+              artwork: currentArtwork,
+              selectedPrice,
+              accuracy: calculateAccuracy(selectedPrice, currentArtwork.price),
+            },
+          ];
+
+      onComplete(finalResults);
     }
   };
 
   const isCorrect = selectedPrice === currentArtwork.price;
-  const currentAccuracy = selectedPrice !== null 
+  const currentAccuracy = selectedPrice !== null
     ? calculateAccuracy(selectedPrice, currentArtwork.price)
     : 0;
 
