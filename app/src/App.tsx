@@ -1,15 +1,10 @@
 import { useState, useCallback, useEffect } from 'react';
-import { Navbar } from '@/components/navigation/Navbar';
-import { HomePage } from '@/components/pages/HomePage';
-import { CategoryPage } from '@/components/pages/CategoryPage';
-import { GamesPage } from '@/components/pages/GamesPage';
 import { GameScreen } from '@/components/game/GameScreen';
 import { ResultScreen } from '@/components/game/ResultScreen';
 import { StartScreen } from '@/components/game/StartScreen';
 import { getRandomArtworks, type Artwork } from '@/data/artworks';
-import { getRandomTool, categories, type AITool, type Category } from '@/data/aiTools';
 
-type PageState = 'home' | 'category' | 'games' | 'game-playing' | 'game-result';
+type PageState = 'start' | 'playing' | 'result';
 
 interface GameResult {
   artwork: Artwork;
@@ -30,12 +25,7 @@ export interface LeaderboardEntry {
 }
 
 function App() {
-  const [currentPage, setCurrentPage] = useState<PageState>('home');
-  const [selectedCategory, setSelectedCategory] = useState<Category | null>(null);
-  const [featuredTool, setFeaturedTool] = useState<AITool>(getRandomTool());
-
-  // Game states
-  const [gameState, setGameState] = useState<'start' | 'playing' | 'result'>('start');
+  const [currentPage, setCurrentPage] = useState<PageState>('start');
   const [artworks, setArtworks] = useState<Artwork[]>([]);
   const [results, setResults] = useState<GameResult[]>([]);
   const [history, setHistory] = useState<HistoryRecord[]>([]);
@@ -69,29 +59,6 @@ function App() {
     }
   }, []);
 
-  // Navigation handlers
-  const handleNavigateHome = useCallback(() => {
-    setCurrentPage('home');
-    setFeaturedTool(getRandomTool());
-    setSelectedCategory(null);
-  }, []);
-
-  const handleNavigateCategory = useCallback((category: Category) => {
-    setSelectedCategory(category);
-    setCurrentPage('category');
-  }, []);
-
-  const handleNavigateGames = useCallback(() => {
-    setCurrentPage('games');
-    setGameState('start');
-  }, []);
-
-  const handleNavigateToGame = useCallback(() => {
-    setCurrentPage('game-playing');
-    setGameState('start');
-  }, []);
-
-  // Game handlers
   const saveHistory = useCallback((newRecord: HistoryRecord) => {
     setHistory(prev => {
       const updated = [...prev, newRecord].slice(-10);
@@ -135,11 +102,10 @@ function App() {
   const handleGameStart = useCallback((name: string) => {
     setUsername(name);
     localStorage.setItem('artprice-username', name);
-    const selectedArtworks = getRandomArtworks(10);
-    setArtworks(selectedArtworks);
+    setArtworks(getRandomArtworks(10));
     setResults([]);
     setGameStartTime(Date.now());
-    setGameState('playing');
+    setCurrentPage('playing');
   }, []);
 
   const handleGameComplete = useCallback((gameResults: GameResult[]) => {
@@ -164,108 +130,42 @@ function App() {
       });
     }
 
-    setGameState('result');
-    setCurrentPage('game-result');
+    setCurrentPage('result');
   }, [saveHistory, saveLeaderboard, username, gameStartTime]);
 
   const handleGameRestart = useCallback(() => {
-    setGameState('start');
     setArtworks([]);
     setResults([]);
-    setCurrentPage('games');
-  }, []);
-
-  const handleBackFromGame = useCallback(() => {
-    setCurrentPage('games');
-    setGameState('start');
+    setCurrentPage('start');
   }, []);
 
   return (
     <div className="min-h-screen bg-black text-white font-sans selection:bg-orange-500/30">
-      {/* Global background - top to bottom orange-black gradient */}
       <div className="fixed inset-0 pointer-events-none bg-gradient-to-b from-orange-900/30 via-black to-black" />
 
-      {/* Navigation */}
-      <Navbar
-        categories={categories}
-        currentPage={currentPage === 'home' ? 'home' : currentPage === 'games' || currentPage === 'game-playing' || currentPage === 'game-result' ? 'games' : 'category'}
-        currentCategoryId={selectedCategory?.id || null}
-        onNavigateHome={handleNavigateHome}
-        onNavigateCategory={handleNavigateCategory}
-        onNavigateGames={handleNavigateGames}
-      />
-
-      {/* Content */}
-      <div className="relative z-10 pt-16">
-        {currentPage === 'home' && (
-          <HomePage
-            featuredTool={featuredTool}
-            categories={categories}
-            onNavigateCategory={handleNavigateCategory}
-            onNavigateGames={handleNavigateGames}
-            onRefreshFeatured={() => setFeaturedTool(getRandomTool())}
+      <div className="relative z-10">
+        {currentPage === 'start' && (
+          <StartScreen
+            onStart={handleGameStart}
+            history={history}
+            leaderboard={leaderboard}
+            defaultUsername={username}
           />
         )}
 
-        {currentPage === 'category' && selectedCategory && (
-          <CategoryPage
-            category={selectedCategory}
-            onBack={handleNavigateHome}
+        {currentPage === 'playing' && artworks.length > 0 && (
+          <GameScreen
+            artworks={artworks}
+            onComplete={handleGameComplete}
           />
         )}
 
-        {currentPage === 'games' && (
-          <GamesPage
-            onPlayArtPrice={handleNavigateToGame}
+        {currentPage === 'result' && (
+          <ResultScreen
+            results={results}
+            onRestart={handleGameRestart}
+            timeSeconds={Math.round((Date.now() - gameStartTime) / 1000)}
           />
-        )}
-
-        {currentPage === 'game-playing' && gameState === 'start' && (
-          <div className="min-h-screen flex flex-col">
-            <button
-              onClick={handleBackFromGame}
-              className="absolute top-20 left-4 z-50 px-4 py-2 text-sm text-white/70 hover:text-white bg-white/10 hover:bg-white/20 rounded-lg backdrop-blur-sm transition-all"
-            >
-              ← 返回小游戏
-            </button>
-            <StartScreen
-              onStart={handleGameStart}
-              history={history}
-              leaderboard={leaderboard}
-              defaultUsername={username}
-            />
-          </div>
-        )}
-
-        {currentPage === 'game-playing' && gameState === 'playing' && artworks.length > 0 && (
-          <div className="min-h-screen flex flex-col">
-            <button
-              onClick={handleBackFromGame}
-              className="absolute top-20 left-4 z-50 px-4 py-2 text-sm text-white/70 hover:text-white bg-white/10 hover:bg-white/20 rounded-lg backdrop-blur-sm transition-all"
-            >
-              ← 退出游戏
-            </button>
-            <GameScreen
-              artworks={artworks}
-              onComplete={handleGameComplete}
-            />
-          </div>
-        )}
-
-        {currentPage === 'game-result' && (
-          <div className="min-h-screen flex flex-col">
-            <button
-              onClick={handleBackFromGame}
-              className="absolute top-20 left-4 z-50 px-4 py-2 text-sm text-white/70 hover:text-white bg-white/10 hover:bg-white/20 rounded-lg backdrop-blur-sm transition-all"
-            >
-              ← 返回小游戏
-            </button>
-            <ResultScreen
-              results={results}
-              onRestart={handleGameRestart}
-              timeSeconds={Math.round((Date.now() - gameStartTime) / 1000)}
-            />
-          </div>
         )}
       </div>
     </div>
